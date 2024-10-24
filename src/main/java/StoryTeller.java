@@ -23,7 +23,7 @@ public class StoryTeller {
 
     private void processCommand(String input) {
         String[] parts = input.split(" ", 2);
-        String verb = parts[0];
+        String verb = resolveVerb(parts[0]);
         String object = parts.length > 1 ? parts[1] : "";
 
         if (currentRoom.verbs.containsKey(verb)) {
@@ -38,24 +38,45 @@ public class StoryTeller {
         }
     }
 
+
+    private String resolveVerb(String inputVerb) {
+
+        for (Map.Entry<String, Verb> entry : game.verbs.entrySet()) {
+            Verb verb = entry.getValue();
+            if (verb.synonyms.contains(inputVerb)) {
+                return entry.getKey();
+            }
+        }
+        return inputVerb;
+    }
+
     private void performAction(Object action) {
-        if (action instanceof String) {
-            Console.print((String) action);
-        } else if (action instanceof Map) {
+        if (action instanceof Map) {
             Map<String, Object> actionMap = (Map<String, Object>) action;
+
+            if (actionMap.containsKey("room")) {
+                String nextRoom = (String) actionMap.get("room");
+                currentRoom = game.rooms.get(nextRoom);
+            }
+
             if (actionMap.containsKey("message")) {
                 Console.print((String) actionMap.get("message"));
             }
-            if (actionMap.containsKey("room")) {
-                currentRoom = game.rooms.get(actionMap.get("room"));
-            }
+
             if (actionMap.containsKey("addState")) {
                 states.add((String) actionMap.get("addState"));
             }
         }
     }
 
+
+
     private void handleError(String type) {
-        Console.print(game.verbs.get("default").errors.get(type));
+        Verb defaultVerb = game.verbs.get("default");
+        if (defaultVerb != null && defaultVerb.errors.containsKey(type)) {
+            Console.print(defaultVerb.errors.get(type));
+        } else {
+            Console.print("Unknown error occurred.");
+        }
     }
 }
