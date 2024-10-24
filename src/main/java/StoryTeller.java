@@ -1,6 +1,7 @@
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 
 public class StoryTeller {
     private Game game;
@@ -38,9 +39,7 @@ public class StoryTeller {
         }
     }
 
-
     private String resolveVerb(String inputVerb) {
-
         for (Map.Entry<String, Verb> entry : game.verbs.entrySet()) {
             Verb verb = entry.getValue();
             if (verb.synonyms.contains(inputVerb)) {
@@ -51,25 +50,32 @@ public class StoryTeller {
     }
 
     private void performAction(Object action) {
-        if (action instanceof Map) {
-            Map<String, Object> actionMap = (Map<String, Object>) action;
 
-            if (actionMap.containsKey("room")) {
-                String nextRoom = (String) actionMap.get("room");
-                currentRoom = game.rooms.get(nextRoom);
-            }
-
-            if (actionMap.containsKey("message")) {
-                Console.print((String) actionMap.get("message"));
-            }
-
-            if (actionMap.containsKey("addState")) {
-                states.add((String) actionMap.get("addState"));
+        if (action instanceof List) {
+            List<?> actionList = (List<?>) action;
+            for (Object act : actionList) {
+                if (act instanceof Map) {
+                    executeAction((Map<String, Object>) act);
+                }
             }
         }
     }
 
 
+    private void executeAction(Map<String, Object> actionMap) {
+        if (actionMap.containsKey("room")) {
+            String nextRoom = (String) actionMap.get("room");
+            currentRoom = game.rooms.get(nextRoom);
+        }
+
+        if (actionMap.containsKey("message")) {
+            Console.print((String) actionMap.get("message"));
+        }
+
+        if (actionMap.containsKey("addState")) {
+            states.add((String) actionMap.get("addState"));
+        }
+    }
 
     private void handleError(String type) {
         Verb defaultVerb = game.verbs.get("default");
